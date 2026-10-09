@@ -1,0 +1,50 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  name      String?
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  artworks Artwork[]
+
+  @@map("users")
+}
+
+model Artwork {
+  id          String                      @id @default(uuid())
+  userId      String                      @map("user_id")
+  title       String
+  imageUrl    String                      @map("image_url")
+  imageVector Unsupported("vector(512)")? @map("image_vector")
+  createdAt   DateTime                    @default(now()) @map("created_at")
+  updatedAt   DateTime                    @updatedAt @map("updated_at")
+
+  user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  shieldLogs ShieldLog[]
+
+  @@index([userId])
+  @@map("artworks")
+}
+
+model ShieldLog {
+  id              String   @id @default(uuid())
+  artworkId       String   @map("artwork_id")
+  matchedUrl      String   @map("matched_url")
+  similarityScore Float    @map("similarity_score")
+  status          String
+  timestamp       DateTime @default(now())
+
+  artwork Artwork @relation(fields: [artworkId], references: [id], onDelete: Cascade)
+
+  @@index([artworkId])
+  @@map("shield_logs")
+}
